@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Presensi & Absensi Siswa</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            body {
+                background: white;
+                color: black;
+            }
+            .card-shadow {
+                box-shadow: none !important;
+                border: 1px solid #e5e7eb !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen pb-12">
+
+    <!-- Header Navbar -->
+    <header class="bg-indigo-700 text-white shadow-lg no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/10 p-2.5 rounded-xl backdrop-blur-md">
+                    <i class="fa-solid fa-clipboard-user text-2xl text-indigo-200"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">Presensi Siswa Digital</h1>
+                    <p class="text-xs text-indigo-200">Sistem Pencatatan & Rekapitulasi Kehadiran Kelas</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="copySummary()" class="bg-indigo-600 hover:bg-indigo-800 text-white text-xs sm:text-sm font-medium px-3.5 py-2 rounded-lg transition duration-200 flex items-center gap-2 shadow-sm border border-indigo-500">
+                    <i class="fa-regular fa-copy"></i> Salin Ringkasan
+                </button>
+                <button onclick="exportCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-medium px-3.5 py-2 rounded-lg transition duration-200 flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-file-excel"></i> Unduh CSV
+                </button>
+                <button onclick="window.print()" class="bg-amber-500 hover:bg-amber-600 text-white text-xs sm:text-sm font-medium px-3.5 py-2 rounded-lg transition duration-200 flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-print"></i> Cetak / PDF
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+
+        <!-- Information & Settings Panel -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 mb-6 card-shadow">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Tanggal Presensi</label>
+                    <div class="relative">
+                        <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="date" id="attendanceDate" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kelas / Rombel</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-graduation-cap absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="className" value="Kelas X-A" placeholder="Contoh: Kelas X IPA 1" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Mata Pelajaran / Sesi</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-book-bookmark absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="subjectName" value="Presensi Harian" placeholder="Contoh: Matematika" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Summary Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-medium text-slate-500">Total Siswa</p>
+                    <h3 id="statTotal" class="text-2xl font-bold text-slate-800">34</h3>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+            
+            <div class="bg-emerald-50/70 p-4 rounded-xl border border-emerald-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-emerald-700">Hadir (H)</p>
+                    <h3 id="statHadir" class="text-2xl font-bold text-emerald-700">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold">
+                    H
+                </div>
+            </div>
+
+            <div class="bg-sky-50/70 p-4 rounded-xl border border-sky-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-sky-700">Izin (I)</p>
+                    <h3 id="statIzin" class="text-2xl font-bold text-sky-700">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-sky-100 flex items-center justify-center text-sky-600 font-bold">
+                    I
+                </div>
+            </div>
+
+            <div class="bg-amber-50/70 p-4 rounded-xl border border-amber-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-amber-700">Sakit (S)</p>
+                    <h3 id="statSakit" class="text-2xl font-bold text-amber-700">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 font-bold">
+                    S
+                </div>
+            </div>
+
+            <div class="bg-rose-50/70 p-4 rounded-xl border border-rose-200 shadow-sm flex items-center justify-between col-span-2 sm:col-span-1">
+                <div>
+                    <p class="text-xs font-semibold text-rose-700">Alpa (A)</p>
+                    <h3 id="statAlpa" class="text-2xl font-bold text-rose-700">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center text-rose-600 font-bold">
+                    A
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls & Search Toolbar -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 mb-6 no-print">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <!-- Search Input -->
+                <div class="relative w-full sm:w-72">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="searchInput" placeholder="Cari nama siswa..." oninput="filterStudents()" class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                </div>
+
+                <!-- Quick Action Buttons -->
+                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                    <button onclick="setAllStatus('H')" class="flex-1 sm:flex-none px-3.5 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-xs font-semibold transition duration-150 flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-check-double text-emerald-600"></i> Set Semua Hadir
+                    </button>
+                    <button onclick="setAllStatus('A')" class="flex-1 sm:flex-none px-3.5 py-2 bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-lg text-xs font-semibold transition duration-150 flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-xmark text-rose-600"></i> Set Semua Alpa
+                    </button>
+                    <button onclick="resetAllStatus()" class="flex-1 sm:flex-none px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition duration-150 flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-rotate-left"></i> Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Table -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden card-shadow">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100/80 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                            <th class="py-3.5 px-4 text-center w-12">No</th>
+                            <th class="py-3.5 px-4">Nama Siswa</th>
+                            <th class="py-3.5 px-4 text-center min-w-[260px]">Status Kehadiran</th>
+                            <th class="py-3.5 px-4 min-w-[180px]">Keterangan / Catatan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody" class="divide-y divide-slate-100 text-sm text-slate-700">
+                        <!-- Rows dynamically generated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            <!-- Empty Search Result State -->
+            <div id="emptyState" class="hidden py-12 text-center text-slate-400">
+                <i class="fa-regular fa-folder-open text-4xl mb-2"></i>
+                <p class="text-sm font-medium">Siswa tidak ditemukan.</p>
+            </div>
+        </div>
+
+        <!-- Printable Footer (Only visible on print) -->
+        <div class="hidden print-only mt-12 pt-8 border-t border-slate-300">
+            <div class="flex justify-between items-end text-sm">
+                <div>
+                    <p>Mengetahui,</p>
+                    <p class="font-semibold mt-1 mb-16">Wali Kelas / Guru Pengajar</p>
+                    <p class="underline font-bold">( .................................................... )</p>
+                </div>
+                <div class="text-right">
+                    <p id="printDateText">Tanggal: -</p>
+                    <p class="font-semibold mt-1 mb-16">Ketua Kelas / Petugas</p>
+                    <p class="underline font-bold">( .................................................... )</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Custom Toast Notification -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 z-50">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMessage" class="text-sm font-medium">Pesan notifikasi...</span>
+    </div>
+
+    <script>
+        // Raw Student List
+        const rawStudentList = [
+            "Abdan Kautsar Nugraha",
+            "Arsava keyla capriconita",
+            "Ayatu syifana ramadan",
+            "Bintang Afiya rachma",
+            "Chantika putri aulia lubis",
+            "Dhea putri ramadan",
+            "Dzakwan ramadani",
+            "Faras nugraha",
+            "Febri rahmadini",
+            "Lingga faulina",
+            "M.putra aliffian",
+            "Miftahul ulum",
+            "Mochamad arameru qesha",
+            "Mozha sheren alviona",
+            "Muhamad adam maulana",
+            "Muhamad ikhsan hibatulloh",
+            "Muhamad surya abdullah",
+            "Muhammad ihsan fawwaz",
+            "Muhammad azzamy syauqi",
+            "Muhammad fairuz tamirullah",
+            "Muhammad fathan al'atqa",
+            "Muhammad raysha ramdhani",
+            "Nasya abieza choir",
+            "Nazar andriyansyah",
+            "Prisco steven siburian",
+            "Putranto adi nugroho",
+            "Rangga hidayatullah",
+            "Ridho rachman",
+            "Rifki akbar darmanto",
+            "Rizki fathan maulidan",
+            "Robi sujana",
+            "Sultan",
+            "Yusuf astha fairus",
+            "Zifara kayla putri"
+        ];
+
+        // Format student data array
+        let studentsData = rawStudentList.map((name, index) => ({
+            id: index + 1,
+            name: name,
+            status: 'H', // Default to 'Hadir'
+            note: ''
+        }));
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Set Default Date to Today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('attendanceDate').value = today;
+
+            // Load saved state if exists
+            loadSavedData();
+            
+            // Render Table
+            renderTable();
+            
+            // Update stats
+            updateStatistics();
+
+            // Auto-save listeners
+            document.getElementById('attendanceDate').addEventListener('change', saveData);
+            document.getElementById('className').addEventListener('input', saveData);
+            document.getElementById('subjectName').addEventListener('input', saveData);
+        });
+
+        function renderTable() {
+            const tbody = document.getElementById('studentTableBody');
+            tbody.innerHTML = '';
+
+            studentsData.forEach((student, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition-colors student-row";
+                tr.setAttribute('data-name', student.name.toLowerCase());
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 text-center text-xs font-semibold text-slate-400">${student.id}</td>
+                    <td class="py-3 px-4 font-medium text-slate-800 capitalize-name">
+                        ${student.name}
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex items-center justify-center gap-1 sm:gap-2">
+                            <!-- Hadir (H) -->
+                            <button type="button" onclick="setStatus(${student.id}, 'H')" 
+                                class="status-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${student.status === 'H' ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-600 ring-offset-1' : 'bg-slate-100 text-slate-600 hover:bg-emerald-100 hover:text-emerald-700'}">
+                                H
+                            </button>
+                            <!-- Izin (I) -->
+                            <button type="button" onclick="setStatus(${student.id}, 'I')" 
+                                class="status-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${student.status === 'I' ? 'bg-sky-600 text-white shadow-sm ring-2 ring-sky-600 ring-offset-1' : 'bg-slate-100 text-slate-600 hover:bg-sky-100 hover:text-sky-700'}">
+                                I
+                            </button>
+                            <!-- Sakit (S) -->
+                            <button type="button" onclick="setStatus(${student.id}, 'S')" 
+                                class="status-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${student.status === 'S' ? 'bg-amber-500 text-white shadow-sm ring-2 ring-amber-500 ring-offset-1' : 'bg-slate-100 text-slate-600 hover:bg-amber-100 hover:text-amber-700'}">
+                                S
+                            </button>
+                            <!-- Alpa (A) -->
+                            <button type="button" onclick="setStatus(${student.id}, 'A')" 
+                                class="status-btn px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${student.status === 'A' ? 'bg-rose-600 text-white shadow-sm ring-2 ring-rose-600 ring-offset-1' : 'bg-slate-100 text-slate-600 hover:bg-rose-100 hover:text-rose-700'}">
+                                A
+                            </button>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4">
+                        <input type="text" 
+                            placeholder="Catatan..." 
+                            value="${student.note}" 
+                            oninput="updateNote(${student.id}, this.value)"
+                            class="w-full px-2.5 py-1 text-xs bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function setStatus(id, newStatus) {
+            const student = studentsData.find(s => s.id === id);
+            if (student) {
+                student.status = newStatus;
+                renderTable();
+                updateStatistics();
+                saveData();
+            }
+        }
+
+        function updateNote(id, noteText) {
+            const student = studentsData.find(s => s.id === id);
+            if (student) {
+                student.note = noteText;
+                saveData();
+            }
+        }
+
+        function setAllStatus(status) {
+            studentsData.forEach(s => s.status = status);
+            renderTable();
+            updateStatistics();
+            saveData();
+            showToast(`Semua status berhasil diubah ke: ${status === 'H' ? 'Hadir' : 'Alpa'}`);
+        }
+
+        function resetAllStatus() {
+            studentsData.forEach(s => {
+                s.status = 'H';
+                s.note = '';
+            });
+            renderTable();
+            updateStatistics();
+            saveData();
+            showToast('Seluruh data presensi berhasil direset ke Hadir.');
+        }
+
+        function updateStatistics() {
+            const counts = { H: 0, I: 0, S: 0, A: 0 };
+            studentsData.forEach(s => {
+                if (counts.hasOwnProperty(s.status)) {
+                    counts[s.status]++;
+                }
+            });
+
+            document.getElementById('statTotal').innerText = studentsData.length;
+            document.getElementById('statHadir').innerText = counts.H;
+            document.getElementById('statIzin').innerText = counts.I;
+            document.getElementById('statSakit').innerText = counts.S;
+            document.getElementById('statAlpa').innerText = counts.A;
+
+            // Sync print metadata
+            const dateVal = document.getElementById('attendanceDate').value;
+            document.getElementById('printDateText').innerText = `Tanggal: ${dateVal ? dateVal : '-'}`;
+        }
+
+        function filterStudents() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const rows = document.querySelectorAll('.student-row');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const name = row.getAttribute('data-name');
+                if (name.includes(query)) {
+                    row.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+
+            const emptyState = document.getElementById('emptyState');
+            if (visibleCount === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+            }
+        }
+
+        function saveData() {
+            const payload = {
+                date: document.getElementById('attendanceDate').value,
+                className: document.getElementById('className').value,
+                subjectName: document.getElementById('subjectName').value,
+                students: studentsData
+            };
+            localStorage.setItem('absensi_app_data', JSON.stringify(payload));
+        }
+
+        function loadSavedData() {
+            const saved = localStorage.getItem('absensi_app_data');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    if (parsed.date) document.getElementById('attendanceDate').value = parsed.date;
+                    if (parsed.className) document.getElementById('className').value = parsed.className;
+                    if (parsed.subjectName) document.getElementById('subjectName').value = parsed.subjectName;
+                    if (parsed.students && Array.isArray(parsed.students)) {
+                        studentsData = parsed.students;
+                    }
+                } catch (e) {
+                    console.error("Gagal memuat data lokal", e);
+                }
+            }
+        }
+
+        function copySummary() {
+            const date = document.getElementById('attendanceDate').value;
+            const className = document.getElementById('className').value;
+            const subject = document.getElementById('subjectName').value;
+
+            const counts = { H: 0, I: 0, S: 0, A: 0 };
+            const absents = { I: [], S: [], A: [] };
+
+            studentsData.forEach(s => {
+                counts[s.status]++;
+                if (s.status === 'I') absents.I.push(`${s.name}${s.note ? ` (${s.note})` : ''}`);
+                if (s.status === 'S') absents.S.push(`${s.name}${s.note ? ` (${s.note})` : ''}`);
+                if (s.status === 'A') absents.A.push(`${s.name}${s.note ? ` (${s.note})` : ''}`);
+            });
+
+            let summaryText = `📋 *LAPORAN PRESENSI SISWA*\n`;
+            summaryText += `------------------------------------\n`;
+            summaryText += `Kelas       : ${className}\n`;
+            summaryText += `Mata Pelajaran: ${subject}\n`;
+            summaryText += `Tanggal     : ${date}\n`;
+            summaryText += `------------------------------------\n`;
+            summaryText += `📊 *RINGKASAN KEHADIRAN*:\n`;
+            summaryText += `• Total Siswa : ${studentsData.length}\n`;
+            summaryText += `• Hadir (H)   : ${counts.H}\n`;
+            summaryText += `• Izin (I)    : ${counts.I}\n`;
+            summaryText += `• Sakit (S)   : ${counts.S}\n`;
+            summaryText += `• Alpa (A)    : ${counts.A}\n`;
+            summaryText += `------------------------------------\n`;
+
+            if (counts.I > 0) summaryText += `\n*Siswa Izin (I):*\n` + absents.I.map((item, idx) => `${idx + 1}. ${item}`).join('\n') + `\n`;
+            if (counts.S > 0) summaryText += `\n*Siswa Sakit (S):*\n` + absents.S.map((item, idx) => `${idx + 1}. ${item}`).join('\n') + `\n`;
+            if (counts.A > 0) summaryText += `\n*Siswa Alpa (A):*\n` + absents.A.map((item, idx) => `${idx + 1}. ${item}`).join('\n') + `\n`;
+
+            // Copy using fallback execCommand for compatibility
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = summaryText;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            showToast('Ringkasan presensi berhasil disalin!');
+        }
+
+        function exportCSV() {
+            const date = document.getElementById('attendanceDate').value;
+            const className = document.getElementById('className').value;
+            
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "No,Nama Siswa,Status Kehadiran,Keterangan\n";
+
+            studentsData.forEach(s => {
+                const statusFull = s.status === 'H' ? 'Hadir' : s.status === 'I' ? 'Izin' : s.status === 'S' ? 'Sakit' : 'Alpa';
+                const cleanNote = s.note.replace(/,/g, ';');
+                csvContent += `${s.id},"${s.name}",${statusFull},"${cleanNote}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Presensi_${className.replace(/\s+/g, '_')}_${date}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast('File CSV berhasil diunduh!');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
