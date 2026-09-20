@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Presensi & Absensi Siswa</title>
+    <title>Aplikasi Presensi Siswa + Formspree Integration</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome for Icons -->
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Font Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -43,7 +43,7 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight">Presensi Siswa Digital</h1>
-                    <p class="text-xs text-indigo-200">Sistem Pencatatan & Rekapitulasi Kehadiran Kelas</p>
+                    <p class="text-xs text-indigo-200">Sistem Pencatatan & Kirim Rekap via Formspree</p>
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-2">
@@ -60,8 +60,13 @@
         </div>
     </header>
 
-    <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+    <!-- Main Form Component -->
+    <form id="attendanceForm" action="https://formspree.io/f/xvkgznyw" method="POST" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+
+        <!-- Hidden input fields to structure payload sent to Formspree -->
+        <input type="hidden" name="_subject" id="formSubject" value="Laporan Absensi Siswa">
+        <input type="hidden" name="Ringkasan_Kehadiran" id="formSummaryHidden">
+        <input type="hidden" name="Rincian_Siswa" id="formDetailsHidden">
 
         <!-- Information & Settings Panel -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-5 mb-6 card-shadow">
@@ -70,21 +75,21 @@
                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Tanggal Presensi</label>
                     <div class="relative">
                         <i class="fa-regular fa-calendar absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="date" id="attendanceDate" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <input type="date" id="attendanceDate" name="Tanggal" required class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Kelas / Rombel</label>
                     <div class="relative">
                         <i class="fa-solid fa-graduation-cap absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="className" value="Kelas X-A" placeholder="Contoh: Kelas X IPA 1" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <input type="text" id="className" name="Kelas" value="Kelas X-A" placeholder="Contoh: Kelas X IPA 1" required class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Mata Pelajaran / Sesi</label>
                     <div class="relative">
                         <i class="fa-solid fa-book-bookmark absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                        <input type="text" id="subjectName" value="Presensi Harian" placeholder="Contoh: Matematika" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        <input type="text" id="subjectName" name="Mata_Pelajaran" value="Presensi Harian" placeholder="Contoh: Matematika" required class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                     </div>
                 </div>
             </div>
@@ -143,25 +148,29 @@
             </div>
         </div>
 
-        <!-- Controls & Search Toolbar -->
+        <!-- Controls & Formspree Submit Toolbar -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 mb-6 no-print">
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                 <!-- Search Input -->
-                <div class="relative w-full sm:w-72">
+                <div class="relative w-full md:w-72">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                     <input type="text" id="searchInput" placeholder="Cari nama siswa..." oninput="filterStudents()" class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                 </div>
 
-                <!-- Quick Action Buttons -->
-                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
-                    <button onclick="setAllStatus('H')" class="flex-1 sm:flex-none px-3.5 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-xs font-semibold transition duration-150 flex items-center justify-center gap-1.5">
+                <!-- Quick Action Buttons + Formspree Submit -->
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+                    <button type="button" onclick="setAllStatus('H')" class="px-3.5 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-lg text-xs font-semibold transition duration-150 flex items-center justify-center gap-1.5">
                         <i class="fa-solid fa-check-double text-emerald-600"></i> Set Semua Hadir
                     </button>
-                    <button onclick="setAllStatus('A')" class="flex-1 sm:flex-none px-3.5 py-2 bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-lg text-xs font-semibold transition duration-150 flex items-center justify-center gap-1.5">
+                    <button type="button" onclick="setAllStatus('A')" class="px-3.5 py-2 bg-rose-100 hover:bg-rose-200 text-rose-800 rounded-lg text-xs font-semibold transition duration-150 flex items-center justify-center gap-1.5">
                         <i class="fa-solid fa-xmark text-rose-600"></i> Set Semua Alpa
                     </button>
-                    <button onclick="resetAllStatus()" class="flex-1 sm:flex-none px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition duration-150 flex items-center justify-center gap-1.5">
+                    <button type="button" onclick="resetAllStatus()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition duration-150 flex items-center justify-center gap-1.5">
                         <i class="fa-solid fa-rotate-left"></i> Reset
+                    </button>
+                    <!-- Formspree Submit Button -->
+                    <button type="submit" id="submitBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i> Kirim ke Formspree
                     </button>
                 </div>
             </div>
@@ -206,7 +215,7 @@
                 </div>
             </div>
         </div>
-    </main>
+    </form>
 
     <!-- Custom Toast Notification -->
     <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 transition-all duration-300 transform translate-y-20 opacity-0 z-50">
@@ -253,11 +262,11 @@
             "Zifara kayla putri"
         ];
 
-        // Format student data array
+        // Initialize state array
         let studentsData = rawStudentList.map((name, index) => ({
             id: index + 1,
             name: name,
-            status: 'H', // Default to 'Hadir'
+            status: 'H', // Default: Hadir
             note: ''
         }));
 
@@ -266,33 +275,37 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('attendanceDate').value = today;
 
-            // Load saved state if exists
+            // Load saved data if available
             loadSavedData();
             
             // Render Table
             renderTable();
             
-            // Update stats
+            // Update stats & form payload
             updateStatistics();
 
-            // Auto-save listeners
+            // Event listeners
             document.getElementById('attendanceDate').addEventListener('change', saveData);
             document.getElementById('className').addEventListener('input', saveData);
             document.getElementById('subjectName').addEventListener('input', saveData);
+
+            // Formspree AJAX Submission Handler
+            const form = document.getElementById('attendanceForm');
+            form.addEventListener('submit', handleFormSubmit);
         });
 
         function renderTable() {
             const tbody = document.getElementById('studentTableBody');
             tbody.innerHTML = '';
 
-            studentsData.forEach((student, index) => {
+            studentsData.forEach((student) => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50/80 transition-colors student-row";
                 tr.setAttribute('data-name', student.name.toLowerCase());
 
                 tr.innerHTML = `
                     <td class="py-3 px-4 text-center text-xs font-semibold text-slate-400">${student.id}</td>
-                    <td class="py-3 px-4 font-medium text-slate-800 capitalize-name">
+                    <td class="py-3 px-4 font-medium text-slate-800">
                         ${student.name}
                     </td>
                     <td class="py-3 px-4">
@@ -384,7 +397,23 @@
 
             // Sync print metadata
             const dateVal = document.getElementById('attendanceDate').value;
+            const classNameVal = document.getElementById('className').value;
+            const subjectVal = document.getElementById('subjectName').value;
+
             document.getElementById('printDateText').innerText = `Tanggal: ${dateVal ? dateVal : '-'}`;
+            document.getElementById('formSubject').value = `Absensi ${classNameVal} - ${subjectVal} (${dateVal})`;
+
+            // Prepare Formspree Payload Strings
+            document.getElementById('formSummaryHidden').value = 
+                `Total: ${studentsData.length} | Hadir: ${counts.H} | Izin: ${counts.I} | Sakit: ${counts.S} | Alpa: ${counts.A}`;
+
+            // Detail student attendance list formatted for email body
+            let detailsString = studentsData.map(s => {
+                const statusName = s.status === 'H' ? 'Hadir' : s.status === 'I' ? 'Izin' : s.status === 'S' ? 'Sakit' : 'Alpa';
+                return `${s.id}. ${s.name} -> [${statusName}]${s.note ? ' (Ket: ' + s.note + ')' : ''}`;
+            }).join('\n');
+
+            document.getElementById('formDetailsHidden').value = detailsString;
         }
 
         function filterStudents() {
@@ -411,6 +440,7 @@
         }
 
         function saveData() {
+            updateStatistics();
             const payload = {
                 date: document.getElementById('attendanceDate').value,
                 className: document.getElementById('className').value,
@@ -434,6 +464,48 @@
                 } catch (e) {
                     console.error("Gagal memuat data lokal", e);
                 }
+            }
+        }
+
+        // Formspree AJAX Submit Handler
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const submitBtn = document.getElementById('submitBtn');
+            const originalBtnHtml = submitBtn.innerHTML;
+
+            // Make sure hidden input values are fresh
+            updateStatistics();
+
+            // Set Loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Mengirim...`;
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: form.method,
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    showToast('Berhasil terkirim ke Formspree!', 'success');
+                } else {
+                    const data = await response.json();
+                    if (Object.hasOwn(data, 'errors')) {
+                        showToast(data["errors"].map(error => error["message"]).join(", "), 'error');
+                    } else {
+                        showToast('Gagal mengirim data. Periksa konfigurasi Formspree Anda.', 'error');
+                    }
+                }
+            } catch (error) {
+                showToast('Terjadi kesalahan jaringan atau koneksi.', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHtml;
             }
         }
 
@@ -470,7 +542,7 @@
             if (counts.S > 0) summaryText += `\n*Siswa Sakit (S):*\n` + absents.S.map((item, idx) => `${idx + 1}. ${item}`).join('\n') + `\n`;
             if (counts.A > 0) summaryText += `\n*Siswa Alpa (A):*\n` + absents.A.map((item, idx) => `${idx + 1}. ${item}`).join('\n') + `\n`;
 
-            // Copy using fallback execCommand for compatibility
+            // Copy to clipboard
             const tempTextArea = document.createElement('textarea');
             tempTextArea.value = summaryText;
             document.body.appendChild(tempTextArea);
@@ -478,7 +550,7 @@
             document.execCommand('copy');
             document.body.removeChild(tempTextArea);
 
-            showToast('Ringkasan presensi berhasil disalin!');
+            showToast('Ringkasan presensi berhasil disalin!', 'success');
         }
 
         function exportCSV() {
@@ -502,20 +574,29 @@
             link.click();
             document.body.removeChild(link);
 
-            showToast('File CSV berhasil diunduh!');
+            showToast('File CSV berhasil diunduh!', 'success');
         }
 
-        function showToast(message) {
+        function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toastMessage');
-            
+            const toastIcon = document.getElementById('toastIcon');
+
             toastMessage.innerText = message;
+
+            if (type === 'error') {
+                toastIcon.className = 'fa-solid fa-circle-exclamation text-rose-400';
+            } else {
+                toastIcon.className = 'fa-solid fa-circle-check text-emerald-400';
+            }
+            
             toast.classList.remove('translate-y-20', 'opacity-0');
             
             setTimeout(() => {
                 toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
+            }, 3500);
         }
     </script>
 </body>
 </html>
+```
